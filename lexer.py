@@ -24,7 +24,7 @@ class TokenType(str, Enum):
     RBRACE = "RBRACE"       # }
     SEMI = "SEMI"           # ;
     ASSIGN = "ASSIGN"       # =
-    GT = "GT"               # >
+    GT = "gt"               # >
 
     # literals / identifiers
     IDENT = "IDENT"         # user-defined name
