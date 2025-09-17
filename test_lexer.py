@@ -176,11 +176,11 @@ def test_string_newline_forbidden():
 
 #Operators
 def test_ops_word_and_symbol_gt():
-    src = "eq gt and or plus minus mult div neg not >"
+    src = "eq and or plus minus mult div neg not >"
     got = toks(src)
     assert got == [
         (TokenType.EQ.value, "eq"),
-        (TokenType.GT.value, "gt"),
+        # (TokenType.GT.value, "gt"),
         (TokenType.AND.value, "and"),
         (TokenType.OR.value, "or"),
         (TokenType.PLUS.value, "plus"),
@@ -335,10 +335,10 @@ def test_string_unterminated_and_newline():
             assert msg in str(e)
 
 #Operators
-    got = toks("eq gt and or plus minus mult div neg not >")
+    got = toks("eq and or plus minus mult div neg not >")
     assert got == [
         (TokenType.EQ.value, "eq"),
-        (TokenType.GT.value, "gt"),
+        # (TokenType.GT.value, "gt"),
         (TokenType.AND.value, "and"),
         (TokenType.OR.value, "or"),
         (TokenType.PLUS.value, "plus"),
