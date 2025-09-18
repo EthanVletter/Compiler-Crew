@@ -1,3 +1,4 @@
+# symbol_table.py
 import itertools
 
 
@@ -10,7 +11,7 @@ class Symbol:
         self.extra = extra or {}  # for params, return type, etc.
 
     def __repr__(self):
-        return f"{self.type.upper()} {self.name} (scope={self.scope}, node_id{self.node_id}, extra={self.extra})"
+        return f"{self.type.upper()} {self.name} (scope={self.scope}, node_id={self.node_id}, extra={self.extra})"
 
 
 class SymbolTable:
@@ -18,7 +19,6 @@ class SymbolTable:
 
     def __init__(self, scope_name="everywhere", parent=None):
         self.scope_name = scope_name
-        self.parent = parent
         self.parent = parent
         self.symbols = {}  # dict: name -> Symbol
         self.children = []
@@ -77,10 +77,10 @@ if __name__ == "__main__":
     proc_scope.add("localVar", "var")
 
     # Test lookups
-    print(root.lookup("x"))  # global var
+    print(root.lookup("x"))  # global var (Symbol or None)
     print(func_scope.lookup("a"))  # local param
     print(proc_scope.lookup("y"))  # fallback to global
-    print(proc_scope.lookup("z"))  # None ->underfined
+    print(proc_scope.lookup("z"))  # None -> undeclared
 
     # Print everything
     print(root)
