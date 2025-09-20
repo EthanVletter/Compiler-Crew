@@ -28,14 +28,14 @@ def get_test_programs():
         """,
         # ===== VARIABLE AND ASSIGNMENT TESTS =====
         "global_variables": """
-        glob { globalVar1 globalVar2 globalVar3 }
+        glob { globalvar1 globalvar2 globalvar3 }
         proc { }
         func { }
         main {
             var { }
-            globalVar1 = 100;
-            globalVar2 = globalVar1;
-            print globalVar2
+            globalvar1 = 100;
+            globalvar2 = globalvar1;
+            print globalvar2
         }
         """,
         "local_variables": """
@@ -224,11 +224,11 @@ def get_test_programs():
         "procedure_with_parameters": """
         glob { }
         proc {
-            printNumber(x) {
+            printnumber(x) {
                 local { }
                 print x
             }
-            addAndPrint(a b) {
+            addandprint(a b) {
                 local { sum }
                 sum = (a plus b);
                 print sum
@@ -237,14 +237,14 @@ def get_test_programs():
         func { }
         main {
             var { }
-            printNumber(42);
-            addAndPrint(10 20)
+            printnumber(42);
+            addandprint(10 20)
         }
         """,
         "procedure_with_locals": """
         glob { }
         proc {
-            complexProc(x y z) {
+            complexproc(x y z) {
                 local { temp1 temp2 result }
                 temp1 = (x plus y);
                 temp2 = (temp1 mult z);
@@ -255,7 +255,7 @@ def get_test_programs():
         func { }
         main {
             var { }
-            complexProc(5 3 2)
+            complexproc(5 3 2)
         }
         """,
         # ===== FUNCTION TESTS =====
@@ -263,14 +263,14 @@ def get_test_programs():
         glob { }
         proc { }
         func {
-            getNumber() {
+            getnumber() {
                 local { }
                 return 42
             }
         }
         main {
             var { result }
-            result = getNumber();
+            result = getnumber();
             print result
         }
         """,
@@ -336,7 +336,7 @@ def get_test_programs():
         "mixed_control_flow": """
         glob { counter result }
         proc {
-            processValue(val) {
+            processvalue(val) {
                 local { temp }
                 if (val > 10) {
                     temp = (val mult 2)
@@ -365,39 +365,39 @@ def get_test_programs():
             }
         }
         main {
-            var { i fibResult }
+            var { i fibresult }
             counter = 0;
             while (counter > 5) {
-                fibResult = fibonacci(counter);
-                processValue(fibResult);
+                fibresult = fibonacci(counter);
+                processvalue(fibresult);
                 counter = (counter plus 1)
             }
         }
         """,
         "comprehensive_test": """
-glob { globalX globalY globalZ }
+glob { globalx globaly globalz }
 proc {
-    initGlobals() {
+    initglobals() {
         local { }
-        globalX = 10;
-        globalY = 20;
-        globalZ = 30
+        globalx = 10;
+        globaly = 20;
+        globalz = 30
     }
-    printGlobals() {
+    printglobals() {
         local { }
-        print globalX;
-        print globalY;
-        print globalZ
+        print globalx;
+        print globaly;
+        print globalz
     }
 }
 func {
-    calculateSum(a b c) {
+    calculatesum(a b c) {
         local { sum }
         sum = (a plus b);
         sum = (sum plus c);
         return sum
     }
-    isEven(num) {
+    iseven(num) {
         local { remainder result }
         remainder = (num div 2);
         remainder = (remainder mult 2);
@@ -411,13 +411,13 @@ func {
     }
 }
 main {
-    var { total evenCheck i }
-    initGlobals();
-    printGlobals();
-    total = calculateSum(globalX globalY globalZ);
+    var { total evencheck i }
+    initglobals();
+    printglobals();
+    total = calculatesum(globalx globaly globalz);
     print total;
-    evenCheck = isEven(total);
-    if evenCheck {
+    evencheck = iseven(total);
+    if evencheck {
         print "Even"
     } else {
         print "Odd"
@@ -452,7 +452,7 @@ def run_test_suite(parse_function):
         print(f"\n--- Testing: {test_name} ---")
         print("Source:")
         print(source_code.strip())
-        print("\nResult:", end=" ")
+        print("\nresult:", end=" ")
 
         try:
             result = parse_function(source_code)
@@ -474,7 +474,7 @@ def run_test_suite(parse_function):
         status = "✅" if result else "❌"
         print(f"{status} {test_name}")
 
-    print(f"\nPassed: {passed}/{total} ({passed/total*100:.1f}%)")
+    print(f"\npassed: {passed}/{total} ({passed/total*100:.1f}%)")
 
     return results
 
@@ -495,7 +495,7 @@ def get_edge_case_tests():
         "max_parameters": """
         glob { }
         proc {
-            maxParams(a b c) {
+            maxparams(a b c) {
                 local { x y z }
                 print a;
                 print b;
@@ -505,7 +505,7 @@ def get_edge_case_tests():
         func { }
         main {
             var { }
-            maxParams(1 2 3)
+            maxparams(1 2 3)
         }
         """,
         "single_statements": """
@@ -587,8 +587,8 @@ if __name__ == "__main__":
     for name in tests.keys():
         print(f"  - {name}")
 
-    print(f"\nTotal: {len(tests)} test programs")
-    print("\nTo use: call run_test_suite(your_parse_function)")
+    print(f"\ntotal: {len(tests)} test programs")
+    print("\nto use: call run_test_suite(your_parse_function)")
 
     # Uncomment to run example:
     example_test_runner()
