@@ -1,4 +1,3 @@
-# symbol_table.py
 import itertools
 
 
@@ -6,12 +5,15 @@ class Symbol:
     def __init__(self, name, sym_type, scope, node_id, extra=None):
         self.name = name
         self.type = sym_type  # "var", "func", "proc"
-        self.scope = scope  # which scope owns this
+        self.scope = scope
         self.node_id = node_id
-        self.extra = extra or {}  # for params, return type, etc.
+        self.extra = extra or {}
 
     def __repr__(self):
-        return f"{self.type.upper()} {self.name} (scope={self.scope}, node_id={self.node_id}, extra={self.extra})"
+        extras = (
+            ", ".join(f"{k}={v}" for k, v in self.extra.items()) if self.extra else ""
+        )
+        return f"{self.type.upper()} {self.name} (scope={self.scope}, id={self.node_id}{', ' + extras if extras else ''})"
 
 
 class SymbolTable:
@@ -20,7 +22,7 @@ class SymbolTable:
     def __init__(self, scope_name="everywhere", parent=None):
         self.scope_name = scope_name
         self.parent = parent
-        self.symbols = {}  # dict: name -> Symbol
+        self.symbols = {}  # name -> Symbol
         self.children = []
 
     def add(self, name, sym_type, node_id=None, extra=None):
@@ -45,13 +47,17 @@ class SymbolTable:
         self.children.append(child)
         return child
 
-    def __repr__(self):
-        out = f"\n[Scope: {self.scope_name}]\n"
+    def pretty_print(self, indent=0):
+        pad = "  " * indent
+        out = f"{pad}[Scope: {self.scope_name}]\n"
         for sym in self.symbols.values():
-            out += f"  {sym}\n"
+            out += f"{pad}  {sym}\n"
         for c in self.children:
-            out += repr(c)
+            out += c.pretty_print(indent + 1)
         return out
+
+    def __repr__(self):
+        return self.pretty_print()
 
 
 # Debugging/demo
