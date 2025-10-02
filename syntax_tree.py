@@ -6,26 +6,34 @@ class ASTNode:
 
     def __init__(self, nodetype, value=None, children=None):
         self.id = next(ASTNode._id_counter)
-        self.type = nodetype  # e.g., "VAR", "FUNC", "PROC", "ASSIGN"
-        self.value = value  # e.g., variable name, function name, number
+        self.type = nodetype
+        self.value = value
         self.children = children or []
 
     def add_child(self, node):
         self.children.append(node)
 
-    def pretty_print(self, indent=0):
-        pad = "  " * indent
+    def pretty_print(self, prefix="", is_last=True):
+        connector = "└─ " if is_last else "├─ "
         val_str = f": {self.value}" if self.value is not None else ""
-        s = f"{pad}{self.type}{val_str} (id={self.id})\n"
-        for c in self.children:
-            s += c.pretty_print(indent + 1)
+        s = f"{prefix}{connector}{self.type}{val_str} (id={self.id})\n"
+
+        # Update prefix for children
+        if is_last:
+            prefix += "   "
+        else:
+            prefix += "│  "
+
+        for i, child in enumerate(self.children):
+            last = i == len(self.children) - 1
+            s += child.pretty_print(prefix, last)
         return s
 
     def __repr__(self):
         return f"<ASTNode {self.type} id={self.id}>"
 
 
-# Node types
+# ---------------- Node types ----------------
 class ProgramNode(ASTNode):
     def __init__(self, globals_node, procs_node, funcs_node, main_node):
         super().__init__(
