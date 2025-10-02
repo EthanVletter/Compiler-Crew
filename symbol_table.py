@@ -48,7 +48,8 @@ class SymbolTable:
 
     def pretty_print(self, indent=0):
         pad = "  " * indent
-        out = f"{pad}Scope: {self.scope_name}\n"
+        out = f"\n"
+        out += f"{pad}Scope: {self.scope_name}\n"
         if self.symbols:
             col_names = ["Name", "Type", "ID", "Extra"]
             # Determine column widths
