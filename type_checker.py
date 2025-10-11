@@ -1,19 +1,7 @@
-# type_checker.py
-# Works with your SymbolTable and ASTNode classes.
-# Enforces SPL typing rules:
-# - Variables are numeric
-# - Terms: numeric/boolean with correct operator typing
-# - MAXTHREE for params, locals, and input atoms
-# - NAME in call sites / def headers is "typeless" (not present in symbol table)
-# - print with atom (numeric) or string is OK
-# - while/if/do-until conditions are boolean
-# - function returns a numeric ATOM
-
 from typing import Optional, List
 
-# -------------------------------
+
 # Small diagnostics helper
-# -------------------------------
 class TypeErrorReport:
     def __init__(self) -> None:
         self.errors: List[str] = []
@@ -31,19 +19,18 @@ class TypeErrorReport:
         return "Type errors:\n- " + "\n- ".join(self.errors)
 
 
-# -------------------------------
+
 # Constants for "types"
-# -------------------------------
 NUMERIC = "numeric"
 BOOLEAN = "boolean"
 
 
-# -------------------------------
+
 # Utilities: symbol table adapters
-# -------------------------------
 def _is_typeless(scope, name: str) -> bool:
     """True if name is NOT present in symbol tables (required for NAME in calls/defs)."""
     return scope.lookup(name) is None
+
 
 def _declare_var(scope, name: str, report: TypeErrorReport, ctx: str, node_id=None) -> None:
     """Declare a numeric variable in the current scope (collect duplicate errors)."""
@@ -51,6 +38,7 @@ def _declare_var(scope, name: str, report: TypeErrorReport, ctx: str, node_id=No
         scope.add(name, "var", node_id=node_id)
     except Exception as e:
         report.add(f"{ctx}: {e}")
+
 
 def _require_var(scope, name: str, report: TypeErrorReport, ctx: str) -> bool:
     """Ensure name exists and is a variable; return True if OK."""
@@ -64,61 +52,9 @@ def _require_var(scope, name: str, report: TypeErrorReport, ctx: str) -> bool:
     return True
 
 
-# -------------------------------
+
 # The Type Checker
-# -------------------------------
 class TypeChecker:
-    """
-    Plug this into your pipeline:
-
-        root_scope = SymbolTable("everywhere")
-        checker = TypeChecker(root_scope)
-        report = checker.check_program(program_ast)   # program_ast is your ProgramNode
-        print(report.ok, report.errors)
-
-    Expected node.type strings (tweak if yours differ):
-
-      PROGRAM: children = [GLOBALS, PROCS, FUNCS, MAIN]
-      GLOBALS: children = [VAR, VAR, ...]
-      VAR: value = variable name
-
-      PROCS: children = [PROC, PROC, ...]
-      PROC:  value = name, children = [PARAM(=VAR), ..., BODY]
-
-      FUNCS: children = [FUNC, FUNC, ...]
-      FUNC:  value = name, children = [PARAM(=VAR), ..., BODY, RETURN_ATOM]
-             (If you don't have RETURN_ATOM as a child, the checker will also look
-              for a 'RETURN' instruction as the last instruction of BODY's ALGO.)
-
-      MAIN:  children = [VARS_BLOCK, ALGO]
-      VARS_BLOCK: children = [VAR, VAR, ...]
-
-      BODY: children = [LOCALS_BLOCK, ALGO]
-      LOCALS_BLOCK: children = [VAR, VAR, ...]   # MAXTHREE rule here
-
-      ALGO: children = [INSTR, INSTR, ...] (must be non-empty)
-
-      Instructions (supported):
-        HALT
-        PRINT: children = [STRING]   or   [ATOM]   (ATOM := VAR | NUMBER)
-        ASSIGN_EXPR: children = [VAR, TERM]
-        ASSIGN_CALL: value=name_of_proc, children = [VAR, INPUT]
-        CALL: value=name_of_proc, children = [INPUT]
-        IF: children = [COND_TERM, THEN_ALGO, (optional) ELSE_ALGO]
-        WHILE: children = [COND_TERM, BODY_ALGO]
-        DO_UNTIL: children = [BODY_ALGO, COND_TERM]
-        RETURN: children = [ATOM]   # (only needed if your FUNC doesn't pass RETURN_ATOM as separate child)
-
-      Terms:
-        VAR(value=name), NUMBER(value=int/float), BOOL(value=True/False) [optional if you support literals]
-        UNOP(value="neg" or "not"): children = [TERM]
-        BINOP(value in {"plus","minus","mult","div","and","or",">","eq"}): children = [TERM, TERM]
-
-      Literals:
-        STRING(value="...")  OK for print
-        NUMBER(value=int/float) numeric ATOM
-        BOOL(value=True/False)  if your language supports it as a literal
-    """
 
     def __init__(self, root_scope):
         self.report = TypeErrorReport()
@@ -145,11 +81,14 @@ class TypeChecker:
         if t == "NUMBER":
             return NUMERIC
         if t in ("BOOL", "TRUE", "FALSE"):
-            # If you have explicit boolean literals; support all 3 spellings defensively.
+            # defensively allow different boolean literal spellings
             return BOOLEAN
-        # Some grammars represent "OUTPUT_ATOM" wrapping the atom
         if t == "OUTPUT_ATOM":
             return self.type_atom(node.children[0])
+        if t == "STRING":
+            # strings are only valid when printed; not an ATOM in expressions
+            self.report.add(f"STRING used where ATOM expected (id={node.id})")
+            return None
         self.report.add(f"Unknown ATOM node '{t}' at id={node.id}")
         return None
 
@@ -178,8 +117,8 @@ class TypeChecker:
 
         if t == "BINOP":
             op = node.value
-            lt = self.type_term(node.children[0])
-            rt = self.type_term(node.children[1])
+            lt = self.type_term(node.children[0]) 
+            rt = self.type_term(node.children[1]) 
             if op in ("plus", "minus", "mult", "div"):
                 if lt == NUMERIC and rt == NUMERIC:
                     return NUMERIC
@@ -198,14 +137,14 @@ class TypeChecker:
             self.report.add(f"Unknown BINOP '{op}' (id={node.id})")
             return None
 
-        # Some grammars use "TERM" wrapper — handle pass-through
         if t == "TERM" and node.children:
+            # pass-through wrapper
             return self.type_term(node.children[0])
 
         self.report.add(f"Unknown TERM node '{t}' at id={node.id}")
         return None
 
-    # ----- OUTPUT / INPUT -----
+    # output and input functions 
     def check_output(self, node, ctx: str):
         # Either PRINT STRING, or PRINT ATOM (numeric)
         t = node.type
@@ -215,22 +154,21 @@ class TypeChecker:
             if self.type_atom(node.children[0]) != NUMERIC:
                 self.report.add(f"{ctx}: output atom must be numeric")
             return
-        # Some ASTs just pass the printed thing directly
         if t in ("VAR", "NUMBER"):
             if self.type_atom(node) != NUMERIC:
                 self.report.add(f"{ctx}: output atom must be numeric")
             return
-        if t == "PRINT":  # In case caller passes the whole instruction by mistake
+        if t == "PRINT":  
             self.check_output(node.children[0], ctx)
             return
         self.report.add(f"{ctx}: unknown OUTPUT node '{t}'")
 
     def check_input(self, node, ctx: str):
         # INPUT: children are ATOMs (0..3), all numeric
-        if node.type != "INPUT":
-            # Some parsers give CALL children directly as atoms list; handle both
+        if node.type == "INPUT":
             atoms = node.children
         else:
+            # Be permissive if the caller passed just a node that wraps the atoms list
             atoms = node.children
 
         if len(atoms) > 3:
@@ -240,7 +178,7 @@ class TypeChecker:
             if self.type_atom(a) != NUMERIC:
                 self.report.add(f"{ctx}: input atoms must be numeric")
 
-    # ----- INSTRUCTIONS / ALGO -----
+    # instr and algo functions
     def check_instr(self, node, ctx: str):
         t = node.type
 
@@ -256,7 +194,6 @@ class TypeChecker:
             name = node.value
             if not _is_typeless(self.scope, name):
                 self.report.add(f"{ctx}: procedure/function name '{name}' must be typeless")
-            # children may be INPUT node or just a list of atoms; handle both
             if node.children:
                 self.check_input(node.children[0], f"{ctx}/call-input")
             return
@@ -269,7 +206,6 @@ class TypeChecker:
                 self.report.add(f"{ctx}: procedure/function name '{name}' must be typeless")
             self.check_input(input_node, f"{ctx}/assign-call-input")
             if var_node.type != "VAR" or not _require_var(self.scope, var_node.value, self.report, f"{ctx}/target"):
-                # Error recorded; stop here
                 return
             return
 
@@ -318,8 +254,7 @@ class TypeChecker:
             return
 
         if t == "RETURN":
-            # Only valid inside FUNC bodies (the caller will validate presence).
-            # children[0] must be numeric ATOM
+            # Only valid inside FUNC bodies (presence validated elsewhere).
             if self.type_atom(node.children[0]) != NUMERIC:
                 self.report.add(f"{ctx}: function return atom must be numeric")
             return
@@ -327,14 +262,9 @@ class TypeChecker:
         self.report.add(f"{ctx}: unknown instruction '{t}'")
 
     def check_algo(self, node, ctx: str):
-        # node.type == "ALGO"; node.children = [INSTR,...]
+        # Must be an ALGO node containing >=1 instruction
         if node.type != "ALGO":
-            # Some parsers may pass a block directly; accept list-of-instr shape:
-            if not node.children:
-                self.report.add(f"{ctx}: ALGO must contain at least one instruction")
-                return
-            for i, instr in enumerate(node.children):
-                self.check_instr(instr, f"{ctx}/instr[{i}]")
+            self.report.add(f"{ctx}: expected ALGO node, got {node.type}")
             return
 
         if not node.children:
@@ -344,7 +274,7 @@ class TypeChecker:
         for i, instr in enumerate(node.children):
             self.check_instr(instr, f"{ctx}/instr[{i}]")
 
-    # ----- DECL BLOCKS / BODY -----
+    # decl and body functions
     def check_maxthree_vars(self, var_nodes, ctx: str):
         # var_nodes: list of VAR decls (0..3)
         if len(var_nodes) > 3:
@@ -387,7 +317,7 @@ class TypeChecker:
         self.check_algo(algo, f"{ctx}/algo")
         self.pop_scope()
 
-    # ----- PROC / FUNC / MAIN / PROGRAM -----
+    #  PROC / FUNC / MAIN / PROGRAM functions
     def check_proc(self, proc_node, ctx: str):
         # PROC: value=name, children = [PARAM(=VAR), ..., BODY]
         name = proc_node.value
@@ -397,7 +327,6 @@ class TypeChecker:
             self.report.add(f"{ctx}: malformed PROC (missing children)")
             return
 
-        # Parameters (all but last child), then BODY
         params = proc_node.children[:-1]
         body = proc_node.children[-1]
 
@@ -406,7 +335,7 @@ class TypeChecker:
         self.check_body(body, f"{ctx}/body")
         self.pop_scope()
 
-    def _check_func_return_presence(self, body_node, explicit_return_atom_node) -> None:
+    def _check_func_return_presence(self, body_node, explicit_return_atom_node, ctx: str) -> None:
         """
         Accept either:
           - FUNC(..., BODY, RETURN_ATOM)
@@ -416,21 +345,20 @@ class TypeChecker:
         """
         if explicit_return_atom_node is not None:
             if self.type_atom(explicit_return_atom_node) != NUMERIC:
-                self.report.add("func: function return atom must be numeric")
+                self.report.add(f"{ctx}: function return atom must be numeric")
 
-        # Try to find RETURN in body's ALGO last instruction
+        had_return_instr = False
         if body_node.type == "BODY" and len(body_node.children) >= 2:
             algo = body_node.children[1]
             if algo.children:
                 last = algo.children[-1]
                 if last.type == "RETURN":
-                    # validate return atom
+                    had_return_instr = True
                     if self.type_atom(last.children[0]) != NUMERIC:
-                        self.report.add("func: function return atom must be numeric")
-                    return
-        # If there was no explicit return child and no RETURN instr, it's an error
-        if explicit_return_atom_node is None:
-            self.report.add("func: missing return atom (neither explicit child nor RETURN instruction found)")
+                        self.report.add(f"{ctx}: function return atom must be numeric")
+
+        if explicit_return_atom_node is None and not had_return_instr:
+            self.report.add(f"{ctx}: missing return atom (neither explicit return child nor RETURN instruction)")
 
     def check_func(self, func_node, ctx: str):
         # FUNC: value=name, children = [PARAM(=VAR), ..., BODY, (optional) RETURN_ATOM]
@@ -442,7 +370,7 @@ class TypeChecker:
             return
 
         # Detect whether the last child is an explicit return atom or not
-        if len(func_node.children) >= 2 and func_node.children[-1].type not in ("BODY",):
+        if len(func_node.children) >= 2 and func_node.children[-1].type != "BODY":
             explicit_return_atom = func_node.children[-1]
             body = func_node.children[-2]
             params = func_node.children[:-2]
@@ -454,7 +382,7 @@ class TypeChecker:
         self.push_scope(f"func {name}")
         self.check_maxthree_vars(params, f"{ctx}/params")
         self.check_body(body, f"{ctx}/body")
-        self._check_func_return_presence(body, explicit_return_atom)
+        self._check_func_return_presence(body, explicit_return_atom, f"{ctx}/return")
         self.pop_scope()
 
     def check_main(self, main_node, ctx: str):
