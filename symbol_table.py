@@ -1,4 +1,3 @@
-# symbol_table.py
 import itertools
 
 
@@ -6,12 +5,15 @@ class Symbol:
     def __init__(self, name, sym_type, scope, node_id, extra=None):
         self.name = name
         self.type = sym_type  # "var", "func", "proc"
-        self.scope = scope  # which scope owns this
+        self.scope = scope
         self.node_id = node_id
-        self.extra = extra or {}  # for params, return type, etc.
+        self.extra = extra or {}
 
-    def __repr__(self):
-        return f"{self.type.upper()} {self.name} (scope={self.scope}, node_id={self.node_id}, extra={self.extra})"
+    def to_row(self):
+        extras = (
+            ", ".join(f"{k}={v}" for k, v in self.extra.items()) if self.extra else ""
+        )
+        return [self.name, self.type.upper(), str(self.node_id), extras]
 
 
 class SymbolTable:
@@ -20,7 +22,7 @@ class SymbolTable:
     def __init__(self, scope_name="everywhere", parent=None):
         self.scope_name = scope_name
         self.parent = parent
-        self.symbols = {}  # dict: name -> Symbol
+        self.symbols = {}  # name -> Symbol
         self.children = []
 
     def add(self, name, sym_type, node_id=None, extra=None):
@@ -33,7 +35,6 @@ class SymbolTable:
         )
 
     def lookup(self, name):
-        """Lookup symbol by crawling up the scope chain"""
         if name in self.symbols:
             return self.symbols[name]
         elif self.parent:
@@ -45,13 +46,37 @@ class SymbolTable:
         self.children.append(child)
         return child
 
-    def __repr__(self):
-        out = f"\n[Scope: {self.scope_name}]\n"
-        for sym in self.symbols.values():
-            out += f"  {sym}\n"
+    def pretty_print(self, indent=0):
+        pad = "  " * indent
+        out = f"\n"
+        out += f"{pad}Scope: {self.scope_name}\n"
+        if self.symbols:
+            col_names = ["Name", "Type", "ID", "Extra"]
+            # Determine column widths
+            rows = [sym.to_row() for sym in self.symbols.values()]
+            widths = [
+                max(len(str(cell)) for cell in [col] + [row[i] for row in rows])
+                for i, col in enumerate(col_names)
+            ]
+            # Header
+            header = " | ".join(col.ljust(widths[i]) for i, col in enumerate(col_names))
+            out += pad + header + "\n"
+            out += pad + "-+-".join("-" * w for w in widths) + "\n"
+            # Rows
+            for row in rows:
+                out += (
+                    pad
+                    + " | ".join(row[i].ljust(widths[i]) for i in range(len(col_names)))
+                    + "\n"
+                )
+        else:
+            out += pad + "(no symbols)\n"
         for c in self.children:
-            out += repr(c)
+            out += c.pretty_print(indent + 1)
         return out
+
+    def __repr__(self):
+        return self.pretty_print()
 
 
 # Debugging/demo
