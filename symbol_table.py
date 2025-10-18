@@ -79,6 +79,24 @@ class SymbolTable:
         return self.pretty_print()
 
 
+def build_symbol_table(ast_root):
+    """Builds a symbol table from AST (simplified version)."""
+    root = SymbolTable("everywhere")
+
+    # global scope
+    globals_scope = root.create_child_scope("global")
+    for child in ast_root.children[0].children:  # GLOBALS
+        globals_scope.add(child.value, "var", node_id=child.id)
+
+    # main scope
+    main_scope = root.create_child_scope("main")
+    vars_node, algo_node = ast_root.children[3].children
+    for child in vars_node.children:  # VARS
+        main_scope.add(child.value, "var", node_id=child.id)
+
+    return root
+
+
 # Debugging/demo
 if __name__ == "__main__":
     # Root "everywhere"

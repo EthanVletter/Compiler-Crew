@@ -2,8 +2,8 @@
 
 from lexer import Lexer, LexerError, TokenType
 from parser import build_spl_grammar, SLRParser, Token, TokenType
-from syntax_tree import ProgramNode, VarDeclNode, ASTNode
-from symbol_table import SymbolTable
+from syntax_tree import ProgramNode, VarDeclNode, ASTNode, build_ast
+from symbol_table import SymbolTable, build_symbol_table
 from code_generator import generate_code_from_ast
 from basic_converter import convert_intermediate_to_basic
 
@@ -12,10 +12,26 @@ from basic_converter import convert_intermediate_to_basic
 import sys
 
 
+def convert_lexer_token_to_parser_string(token):
+    """Convert a lexer Token to a string the parser expects"""
+    # For identifiers, numbers, and strings, use the token type name
+    if token.type == "IDENT":
+        return "IDENT"
+    elif token.type == "NUMBER":
+        return "NUMBER"
+    elif token.type == "STRING":
+        return "STRING"
+    else:
+        # For keywords and symbols, use the actual token value
+        return token.value
+
+
 def compile_spl_from_file(input_file, output_bas):
     """Full SPL pipeline reading input from a file."""
 
-    # Step 1: Read source SPL code from file
+    # Step 0: Read source SPL code from file
+    print("\nStep 0: Read source SPL code from file")
+
     with open(input_file, "r") as f:
         source_code = f.read()
 
@@ -23,8 +39,8 @@ def compile_spl_from_file(input_file, output_bas):
     print("SPL Compiler Pipeline Demonstration (File Input)")
     print("=" * 60)
 
-    # Step 2: Lexical Analysis
-    print("Step 1: Lexical Analysis")
+    # Step 1: Lexical Analysis
+    print("\nStep 1: Lexical Analysis")
     # lexer = Lexer(source_code)
     # tokens = lexer.tokenize()
     # print(f"Tokens: {tokens}")
@@ -43,28 +59,60 @@ def compile_spl_from_file(input_file, output_bas):
         print(f"❌ Unexpected lexer error: {e}")
         return False
 
-    # Step 3: Parsing
-    print("Step 2: Parsing")
-    parser = SLRParser(tokens)
-    ast = parser.parse()
-    print("AST generated.")
+    # Step 2: Parsing
 
-    # Step 4: Build Syntax Tree
+    print("\nStep 2: Parsing")
+    # parser = SLRParser(tokens)
+    # ast = parser.parse()
+    # print("AST generated.")
+
+    # Convert to parser format
+    parser_tokens = [convert_lexer_token_to_parser_string(token) for token in tokens]
+    print(f"\nConverted tokens for parser: {parser_tokens}")
+
+    # Parse
+    try:
+        grammar = build_spl_grammar()
+        parser = SLRParser(grammar)
+        print(f"\n🔄 Starting parse...")
+
+        result = parser.parse(parser_tokens)
+        print(f"Parse result: {'✅ SUCCESS' if result else '❌ FAILED'}")
+        # return result
+
+    except Exception as e:
+        print(f"❌ Parser error: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return False
+
+    # Step 3: Build Syntax Tree
     #
     #
     #
     #
+    print("\nStep 3: Build Syntax Tree")
+    # ast = build_mock_ast()
+    # ast = build_ast()
+    ast = build_ast(tokens)
+    print(ast.pretty_print())
+
+    # print("\n=== SYMBOL TABLE ===")
+    # symtab = build_symbol_table(ast)
+    # print(symtab.pretty_print())
     #
 
-    # Step 5: Build Symbol Table
-    print("Step 3: Building Symbol Table")
+    # Step 4: Build Symbol Table
+    print("\nStep 4: Building Symbol Table")
     # Using your helper method from the file you provided
     symbol_table = SymbolTable("everywhere")
     # Populate symbol table from AST
     symbol_table.populate_from_ast(ast)
     print(symbol_table.pretty_print())
 
-    # Step 6: Type Checking
+    # Step 5: Type Checking
+    print("\nStep 5: Type Checking")
     #
     #
     #
@@ -72,14 +120,14 @@ def compile_spl_from_file(input_file, output_bas):
     #
     #
 
-    # Step 7: Code Generation
-    print("Step 4: Code Generation")
+    # Step 6: Code Generation
+    print("\nStep 6: Code Generation")
     intermediate_file = "intermediate_output.txt"
     target_code = generate_code_from_ast(ast, symbol_table, intermediate_file)
     print(f"Intermediate code written to {intermediate_file}")
 
-    # Step 8: Convert to line-numbered BASIC
-    print("Step 5: Converting to line-numbered BASIC")
+    # Step 7: Convert to line-numbered BASIC
+    print("\nStep 7: Converting to line-numbered BASIC")
     convert_intermediate_to_basic(intermediate_file, output_bas)
     print(f"Executable BASIC code written to {output_bas}")
 

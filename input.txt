@@ -1,10 +1,8 @@
-glob { x y }
+glob { }
 proc { }
 func { }
 main {
-  var { a b1 }
-  print "Hello123"
-  a = 0;
-  while (neg 1) { halt }
-  if (eq 1 1) { print "ok" } else { halt }
+    var { x }
+    x = 42;
+    print x
 }

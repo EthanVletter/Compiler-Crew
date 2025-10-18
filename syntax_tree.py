@@ -55,3 +55,86 @@ class FuncNode(ASTNode):
 class ProcNode(ASTNode):
     def __init__(self, name, params, body):
         super().__init__("PROC", value=name, children=params + [body])
+
+
+def build_ast(tokens):
+    """Builds and populates a complete AST from the given token list."""
+    # 1. Create empty containers for main sections
+    globals_node = ASTNode("GLOBALS")
+    procs_node = ASTNode("PROCS")
+    funcs_node = ASTNode("FUNCS")
+    main_node = ASTNode("MAIN")
+
+    # 2. Create the root program node
+    program_node = ProgramNode(
+        globals_node=globals_node,
+        procs_node=procs_node,
+        funcs_node=funcs_node,
+        main_node=main_node,
+    )
+
+    # 3. Internal state
+    current_section = None
+    var_block_active = False
+    algo_node = None
+    vars_node = None
+
+    # 4. Go through tokens
+    i = 0
+    while i < len(tokens):
+        tok = tokens[i]
+
+        # Detect which section we're in
+        if tok.type.name == "GLOB":
+            current_section = globals_node
+        elif tok.type.name == "PROC":
+            current_section = procs_node
+        elif tok.type.name == "FUNC":
+            current_section = funcs_node
+        elif tok.type.name == "MAIN":
+            current_section = main_node
+
+        # Handle global vars (inside glob { ... })
+        elif tok.type.name == "IDENT" and current_section == globals_node:
+            var_decl = VarDeclNode(tok.value)
+            globals_node.add_child(var_decl)
+
+        # Handle main vars
+        elif tok.type.name == "VAR" and current_section == main_node:
+            var_block_active = True
+            vars_node = ASTNode("VARS")
+            current_section.add_child(vars_node)
+
+        elif var_block_active and tok.type.name == "IDENT":
+            var_decl = VarDeclNode(tok.value)
+            vars_node.add_child(var_decl)
+
+        elif tok.type.name == "RBRACE" and var_block_active:
+            var_block_active = False
+
+        # Handle assignments inside MAIN
+        elif tok.type.name == "IDENT" and current_section == main_node:
+            if (
+                i + 2 < len(tokens)
+                and tokens[i + 1].type.name == "ASSIGN"
+                and tokens[i + 2].type.name == "NUMBER"
+            ):
+                if algo_node is None:
+                    algo_node = ASTNode("ALGO")
+                    main_node.add_child(algo_node)
+                expr = f"{tok.value} = {tokens[i + 2].value}"
+                algo_node.add_child(ASTNode("ASSIGN", value=expr))
+                i += 2  # skip ahead
+
+        # Handle print statements
+        elif tok.type.name == "PRINT":
+            if algo_node is None:
+                algo_node = ASTNode("ALGO")
+                main_node.add_child(algo_node)
+            if i + 1 < len(tokens) and tokens[i + 1].type.name == "IDENT":
+                algo_node.add_child(ASTNode("PRINT", value=tokens[i + 1].value))
+                i += 1
+
+        i += 1
+
+    return program_node
