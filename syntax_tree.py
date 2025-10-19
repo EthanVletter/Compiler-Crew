@@ -85,39 +85,39 @@ def build_ast(tokens):
         tok = tokens[i]
 
         # Detect which section we're in
-        if tok.type.name == "GLOB":
+        if tok.type.upper() == "GLOB":
             current_section = globals_node
-        elif tok.type.name == "PROC":
+        elif tok.type.upper() == "PROC":
             current_section = procs_node
-        elif tok.type.name == "FUNC":
+        elif tok.type.upper() == "FUNC":
             current_section = funcs_node
-        elif tok.type.name == "MAIN":
+        elif tok.type.upper() == "MAIN":
             current_section = main_node
 
         # Handle global vars (inside glob { ... })
-        elif tok.type.name == "IDENT" and current_section == globals_node:
+        elif tok.type.upper() == "IDENT" and current_section == globals_node:
             var_decl = VarDeclNode(tok.value)
             globals_node.add_child(var_decl)
 
         # Handle main vars
-        elif tok.type.name == "VAR" and current_section == main_node:
+        elif tok.type.upper() == "VAR" and current_section == main_node:
             var_block_active = True
             vars_node = ASTNode("VARS")
             current_section.add_child(vars_node)
 
-        elif var_block_active and tok.type.name == "IDENT":
+        elif var_block_active and tok.type.upper() == "IDENT":
             var_decl = VarDeclNode(tok.value)
             vars_node.add_child(var_decl)
 
-        elif tok.type.name == "RBRACE" and var_block_active:
+        elif tok.type.upper() == "RBRACE" and var_block_active:
             var_block_active = False
 
         # Handle assignments inside MAIN
-        elif tok.type.name == "IDENT" and current_section == main_node:
+        elif tok.type.upper() == "IDENT" and current_section == main_node:
             if (
                 i + 2 < len(tokens)
-                and tokens[i + 1].type.name == "ASSIGN"
-                and tokens[i + 2].type.name == "NUMBER"
+                and tokens[i + 1].type.upper() == "ASSIGN"
+                and tokens[i + 2].type.upper() == "NUMBER"
             ):
                 if algo_node is None:
                     algo_node = ASTNode("ALGO")
@@ -127,11 +127,11 @@ def build_ast(tokens):
                 i += 2  # skip ahead
 
         # Handle print statements
-        elif tok.type.name == "PRINT":
+        elif tok.type.upper() == "PRINT":
             if algo_node is None:
                 algo_node = ASTNode("ALGO")
                 main_node.add_child(algo_node)
-            if i + 1 < len(tokens) and tokens[i + 1].type.name == "IDENT":
+            if i + 1 < len(tokens) and tokens[i + 1].type.upper() == "IDENT":
                 algo_node.add_child(ASTNode("PRINT", value=tokens[i + 1].value))
                 i += 1
 

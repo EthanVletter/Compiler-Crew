@@ -30,17 +30,25 @@ def compile_spl_from_file(input_file, output_bas):
     """Full SPL pipeline reading input from a file."""
 
     # Step 0: Read source SPL code from file
-    print("\nStep 0: Read source SPL code from file")
+    print("")
+    print("-" * 60)
+    print("Step 0: Read source SPL code from file")
+    print("-" * 60)
 
-    with open(input_file, "r") as f:
-        source_code = f.read()
+    with open(input_file, "r") as file:
+        source_code = file.read()
+        print(source_code)
 
     print("=" * 60)
     print("SPL Compiler Pipeline Demonstration (File Input)")
     print("=" * 60)
 
     # Step 1: Lexical Analysis
-    print("\nStep 1: Lexical Analysis")
+    print("")
+    print("-" * 60)
+    print("Step 1: Lexical Analysis")
+    print("-" * 60)
+
     # lexer = Lexer(source_code)
     # tokens = lexer.tokenize()
     # print(f"Tokens: {tokens}")
@@ -61,7 +69,10 @@ def compile_spl_from_file(input_file, output_bas):
 
     # Step 2: Parsing
 
-    print("\nStep 2: Parsing")
+    print("")
+    print("-" * 60)
+    print("Step 2: Parsing")
+    print("-" * 60)
     # parser = SLRParser(tokens)
     # ast = parser.parse()
     # print("AST generated.")
@@ -78,6 +89,9 @@ def compile_spl_from_file(input_file, output_bas):
 
         result = parser.parse(parser_tokens)
         print(f"Parse result: {'✅ SUCCESS' if result else '❌ FAILED'}")
+
+        if result == False:
+            return
         # return result
 
     except Exception as e:
@@ -92,7 +106,10 @@ def compile_spl_from_file(input_file, output_bas):
     #
     #
     #
-    print("\nStep 3: Build Syntax Tree")
+    print("")
+    print("-" * 60)
+    print("Step 3: Build Syntax Tree")
+    print("-" * 60)
     # ast = build_mock_ast()
     # ast = build_ast()
     ast = build_ast(tokens)
@@ -104,15 +121,22 @@ def compile_spl_from_file(input_file, output_bas):
     #
 
     # Step 4: Build Symbol Table
-    print("\nStep 4: Building Symbol Table")
+    print("")
+    print("-" * 60)
+    print("Step 4: Building Symbol Table")
+    print("-" * 60)
     # Using your helper method from the file you provided
-    symbol_table = SymbolTable("everywhere")
+    # symbol_table = SymbolTable("everywhere")
+    symbol_table = build_symbol_table(ast)
     # Populate symbol table from AST
-    symbol_table.populate_from_ast(ast)
+    # symbol_table.populate_from_ast(ast)
     print(symbol_table.pretty_print())
 
     # Step 5: Type Checking
-    print("\nStep 5: Type Checking")
+    print("")
+    print("-" * 60)
+    print("Step 5: Type Checking")
+    print("-" * 60)
     #
     #
     #
@@ -121,13 +145,30 @@ def compile_spl_from_file(input_file, output_bas):
     #
 
     # Step 6: Code Generation
-    print("\nStep 6: Code Generation")
+    print("")
+    print("-" * 60)
+    print("Step 6: Code Generation")
+    print("-" * 60)
     intermediate_file = "intermediate_output.txt"
     target_code = generate_code_from_ast(ast, symbol_table, intermediate_file)
     print(f"Intermediate code written to {intermediate_file}")
 
+    # print("\nAST")
+    # print(ast.pretty_print())
+
+    # print("\nsymbol_table")
+    # print(symbol_table.pretty_print())
+
+    print(f"\n📋 Generated Target Code:")
+    print("-" * 30)
+    print(target_code)
+    print("-" * 30)
+
     # Step 7: Convert to line-numbered BASIC
-    print("\nStep 7: Converting to line-numbered BASIC")
+    print("")
+    print("-" * 60)
+    print("Step 7: Converting to line-numbered BASIC")
+    print("-" * 60)
     convert_intermediate_to_basic(intermediate_file, output_bas)
     print(f"Executable BASIC code written to {output_bas}")
 
