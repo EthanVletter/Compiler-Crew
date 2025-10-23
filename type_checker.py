@@ -19,11 +19,9 @@ class TypeErrorReport:
         return "Type errors:\n- " + "\n- ".join(self.errors)
 
 
-
 # Constants for "types"
 NUMERIC = "numeric"
 BOOLEAN = "boolean"
-
 
 
 # Utilities: symbol table adapters
@@ -32,7 +30,9 @@ def _is_typeless(scope, name: str) -> bool:
     return scope.lookup(name) is None
 
 
-def _declare_var(scope, name: str, report: TypeErrorReport, ctx: str, node_id=None) -> None:
+def _declare_var(
+    scope, name: str, report: TypeErrorReport, ctx: str, node_id=None
+) -> None:
     """Declare a numeric variable in the current scope (collect duplicate errors)."""
     try:
         scope.add(name, "var", node_id=node_id)
@@ -50,7 +50,6 @@ def _require_var(scope, name: str, report: TypeErrorReport, ctx: str) -> bool:
         report.add(f"{ctx}: '{name}' is a {sym.type}, not a variable")
         return False
     return True
-
 
 
 # The Type Checker
@@ -117,22 +116,28 @@ class TypeChecker:
 
         if t == "BINOP":
             op = node.value
-            lt = self.type_term(node.children[0]) 
-            rt = self.type_term(node.children[1]) 
+            lt = self.type_term(node.children[0])
+            rt = self.type_term(node.children[1])
             if op in ("plus", "minus", "mult", "div"):
                 if lt == NUMERIC and rt == NUMERIC:
                     return NUMERIC
-                self.report.add(f"Operator '{op}' requires numeric operands (id={node.id})")
+                self.report.add(
+                    f"Operator '{op}' requires numeric operands (id={node.id})"
+                )
                 return None
             if op in ("and", "or"):
                 if lt == BOOLEAN and rt == BOOLEAN:
                     return BOOLEAN
-                self.report.add(f"Operator '{op}' requires boolean operands (id={node.id})")
+                self.report.add(
+                    f"Operator '{op}' requires boolean operands (id={node.id})"
+                )
                 return None
             if op in (">", "eq"):
                 if lt == NUMERIC and rt == NUMERIC:
                     return BOOLEAN
-                self.report.add(f"Operator '{op}' requires numeric operands (id={node.id})")
+                self.report.add(
+                    f"Operator '{op}' requires numeric operands (id={node.id})"
+                )
                 return None
             self.report.add(f"Unknown BINOP '{op}' (id={node.id})")
             return None
@@ -144,7 +149,7 @@ class TypeChecker:
         self.report.add(f"Unknown TERM node '{t}' at id={node.id}")
         return None
 
-    # output and input functions 
+    # output and input functions
     def check_output(self, node, ctx: str):
         # Either PRINT STRING, or PRINT ATOM (numeric)
         t = node.type
@@ -158,7 +163,7 @@ class TypeChecker:
             if self.type_atom(node) != NUMERIC:
                 self.report.add(f"{ctx}: output atom must be numeric")
             return
-        if t == "PRINT":  
+        if t == "PRINT":
             self.check_output(node.children[0], ctx)
             return
         self.report.add(f"{ctx}: unknown OUTPUT node '{t}'")
@@ -187,13 +192,19 @@ class TypeChecker:
 
         if t == "PRINT":
             # children[0] = STRING or ATOM
-            self.check_output(node.children[0], f"{ctx}/print")
+            # self.check_output(node.children[0], f"{ctx}/print")
+            if node.children:
+                self.check_output(node.children[0], f"{ctx}/print")
+            else:
+                self.report.add(f"{ctx}: PRINT has no expression to print")
             return
 
         if t == "CALL":  # value = NAME, children = [INPUT]
             name = node.value
             if not _is_typeless(self.scope, name):
-                self.report.add(f"{ctx}: procedure/function name '{name}' must be typeless")
+                self.report.add(
+                    f"{ctx}: procedure/function name '{name}' must be typeless"
+                )
             if node.children:
                 self.check_input(node.children[0], f"{ctx}/call-input")
             return
@@ -203,9 +214,13 @@ class TypeChecker:
             var_node = node.children[0]
             input_node = node.children[1]
             if not _is_typeless(self.scope, name):
-                self.report.add(f"{ctx}: procedure/function name '{name}' must be typeless")
+                self.report.add(
+                    f"{ctx}: procedure/function name '{name}' must be typeless"
+                )
             self.check_input(input_node, f"{ctx}/assign-call-input")
-            if var_node.type != "VAR" or not _require_var(self.scope, var_node.value, self.report, f"{ctx}/target"):
+            if var_node.type != "VAR" or not _require_var(
+                self.scope, var_node.value, self.report, f"{ctx}/target"
+            ):
                 return
             return
 
@@ -214,7 +229,9 @@ class TypeChecker:
             term_node = node.children[1]
             if self.type_term(term_node) != NUMERIC:
                 self.report.add(f"{ctx}: right-hand side of assignment must be numeric")
-            if var_node.type != "VAR" or not _require_var(self.scope, var_node.value, self.report, f"{ctx}/target"):
+            if var_node.type != "VAR" or not _require_var(
+                self.scope, var_node.value, self.report, f"{ctx}/target"
+            ):
                 return
             return
 
@@ -278,7 +295,9 @@ class TypeChecker:
     def check_maxthree_vars(self, var_nodes, ctx: str):
         # var_nodes: list of VAR decls (0..3)
         if len(var_nodes) > 3:
-            self.report.add(f"{ctx}: at most 3 variables allowed (got {len(var_nodes)})")
+            self.report.add(
+                f"{ctx}: at most 3 variables allowed (got {len(var_nodes)})"
+            )
         seen = set()
         for vn in var_nodes:
             if vn.type != "VAR":
@@ -286,7 +305,9 @@ class TypeChecker:
                 continue
             name = vn.value
             if name in seen:
-                self.report.add(f"{ctx}: duplicate variable '{name}' in declaration list")
+                self.report.add(
+                    f"{ctx}: duplicate variable '{name}' in declaration list"
+                )
             seen.add(name)
             _declare_var(self.scope, name, self.report, ctx, node_id=vn.id)
 
@@ -335,7 +356,9 @@ class TypeChecker:
         self.check_body(body, f"{ctx}/body")
         self.pop_scope()
 
-    def _check_func_return_presence(self, body_node, explicit_return_atom_node, ctx: str) -> None:
+    def _check_func_return_presence(
+        self, body_node, explicit_return_atom_node, ctx: str
+    ) -> None:
         """
         Accept either:
           - FUNC(..., BODY, RETURN_ATOM)
@@ -358,7 +381,9 @@ class TypeChecker:
                         self.report.add(f"{ctx}: function return atom must be numeric")
 
         if explicit_return_atom_node is None and not had_return_instr:
-            self.report.add(f"{ctx}: missing return atom (neither explicit return child nor RETURN instruction)")
+            self.report.add(
+                f"{ctx}: missing return atom (neither explicit return child nor RETURN instruction)"
+            )
 
     def check_func(self, func_node, ctx: str):
         # FUNC: value=name, children = [PARAM(=VAR), ..., BODY, (optional) RETURN_ATOM]
@@ -406,7 +431,9 @@ class TypeChecker:
         FUNCS.children   = [FUNC, ...]
         """
         if program_node.type != "PROGRAM" or len(program_node.children) != 4:
-            self.report.add("PROGRAM: malformed (expected 4 children: GLOBALS, PROCS, FUNCS, MAIN)")
+            self.report.add(
+                "PROGRAM: malformed (expected 4 children: GLOBALS, PROCS, FUNCS, MAIN)"
+            )
             return self.report
 
         globals_node, procs_node, funcs_node, main_node = program_node.children

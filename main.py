@@ -4,6 +4,7 @@ from lexer import Lexer, LexerError, TokenType
 from parser import build_spl_grammar, SLRParser, Token, TokenType
 from syntax_tree import ProgramNode, VarDeclNode, ASTNode, build_ast
 from symbol_table import SymbolTable, build_symbol_table
+from type_checker import TypeChecker
 from code_generator import generate_code_from_ast
 from basic_converter import convert_intermediate_to_basic
 
@@ -30,8 +31,7 @@ def compile_spl_from_file(input_file, output_bas):
     """Full SPL pipeline reading input from a file."""
 
     # Step 0: Read source SPL code from file
-    print("")
-    print("-" * 60)
+    print("\n" + "-" * 60)
     print("Step 0: Read source SPL code from file")
     print("-" * 60)
 
@@ -44,14 +44,9 @@ def compile_spl_from_file(input_file, output_bas):
     print("=" * 60)
 
     # Step 1: Lexical Analysis
-    print("")
-    print("-" * 60)
+    print("\n" + "-" * 60)
     print("Step 1: Lexical Analysis")
     print("-" * 60)
-
-    # lexer = Lexer(source_code)
-    # tokens = lexer.tokenize()
-    # print(f"Tokens: {tokens}")
 
     # Tokenize
     try:
@@ -68,14 +63,9 @@ def compile_spl_from_file(input_file, output_bas):
         return False
 
     # Step 2: Parsing
-
-    print("")
-    print("-" * 60)
+    print("\n" + "-" * 60)
     print("Step 2: Parsing")
     print("-" * 60)
-    # parser = SLRParser(tokens)
-    # ast = parser.parse()
-    # print("AST generated.")
 
     # Convert to parser format
     parser_tokens = [convert_lexer_token_to_parser_string(token) for token in tokens]
@@ -102,12 +92,7 @@ def compile_spl_from_file(input_file, output_bas):
         return False
 
     # Step 3: Build Syntax Tree
-    #
-    #
-    #
-    #
-    print("")
-    print("-" * 60)
+    print("\n" + "-" * 60)
     print("Step 3: Build Syntax Tree")
     print("-" * 60)
     # ast = build_mock_ast()
@@ -121,8 +106,7 @@ def compile_spl_from_file(input_file, output_bas):
     #
 
     # Step 4: Build Symbol Table
-    print("")
-    print("-" * 60)
+    print("\n" + "-" * 60)
     print("Step 4: Building Symbol Table")
     print("-" * 60)
     # Using your helper method from the file you provided
@@ -133,20 +117,31 @@ def compile_spl_from_file(input_file, output_bas):
     print(symbol_table.pretty_print())
 
     # Step 5: Type Checking
-    print("")
-    print("-" * 60)
+    print("\n" + "-" * 60)
     print("Step 5: Type Checking")
     print("-" * 60)
     #
-    #
-    #
+    checker = TypeChecker(symbol_table)
+    report = checker.check_program(ast)
+    # print(report)
+
+    # Check if report has messages
+    if hasattr(report, "messages"):
+        if len(report.messages) == 0:
+            print("✅ Type checking passed with no errors.")
+        else:
+            print("⚠️ Type checking report:")
+            for msg in report.messages:
+                print("  -", msg)
+    else:
+        # Fallback if report is just a list or string
+        print(report)
     #
     #
     #
 
     # Step 6: Code Generation
-    print("")
-    print("-" * 60)
+    print("\n" + "-" * 60)
     print("Step 6: Code Generation")
     print("-" * 60)
     intermediate_file = "intermediate_output.txt"
@@ -165,8 +160,7 @@ def compile_spl_from_file(input_file, output_bas):
     print("-" * 30)
 
     # Step 7: Convert to line-numbered BASIC
-    print("")
-    print("-" * 60)
+    print("\n" + "-" * 60)
     print("Step 7: Converting to line-numbered BASIC")
     print("-" * 60)
     convert_intermediate_to_basic(intermediate_file, output_bas)
