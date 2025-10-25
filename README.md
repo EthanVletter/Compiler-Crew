@@ -24,7 +24,7 @@ The compiler performs all main compilation stages:
 | Thuwayba Dawood | u22622668      |
 | Nobuhle Mtshali | u22526171      |
 
-## 📂 Project Structure
+## Project Structure
 
 ```bash
 📁 Compiler-Crew
@@ -39,6 +39,7 @@ The compiler performs all main compilation stages:
 ├── 📜 utils.py
 ├── 📄 input.txt
 ├── 📄 output.bas
+├── 📜 makefile
 └── 📘 README.md
 ```
 
@@ -47,6 +48,7 @@ The compiler performs all main compilation stages:
 ### **Requirements**
 
 - Python **3.10+**
+- FreeBASIC must be installed to compile and run .bas files (You can install it from https://www.freebasic.net/)
 - All source files in the same directory (as shown above)
 
 ---
@@ -64,6 +66,25 @@ Example:
 ```bash
 python main.py input.txt output.bas
 ```
+
+### **Using the Makefile**
+
+If your compiler output file is named `output.bas`, you can use the included Makefile to automatically compile and run it using FreeBASIC.
+
+Available commands:
+
+```bash
+make        # Compiles output.bas into an executable (output)
+make run    # Compiles and runs the executable
+make clean  # Removes the compiled executable
+```
+
+**This Makefile assumes:**
+
+- Your BASIC source file is named `output.bas`
+- The generated executable will be named `output`
+
+---
 
 ### **Input / Output**
 

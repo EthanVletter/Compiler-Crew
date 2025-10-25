@@ -8,8 +8,6 @@ from type_checker import TypeChecker
 from code_generator import generate_code_from_ast
 from basic_converter import convert_intermediate_to_basic
 
-# from type_checker import TypeChecker
-
 import sys
 
 
@@ -30,6 +28,8 @@ def convert_lexer_token_to_parser_string(token):
 def compile_spl_from_file(input_file, output_bas):
     """Full SPL pipeline reading input from a file."""
 
+    # ---------------------------------------------------------------------------- #
+
     # Step 0: Read source SPL code from file
     print("\n" + "-" * 60)
     print("Step 0: Read source SPL code from file")
@@ -42,6 +42,8 @@ def compile_spl_from_file(input_file, output_bas):
     print("=" * 60)
     print("SPL Compiler Pipeline Demonstration (File Input)")
     print("=" * 60)
+
+    # ---------------------------------------------------------------------------- #
 
     # Step 1: Lexical Analysis
     print("\n" + "-" * 60)
@@ -61,6 +63,8 @@ def compile_spl_from_file(input_file, output_bas):
     except Exception as e:
         print(f"❌ Unexpected lexer error: {e}")
         return False
+
+    # ---------------------------------------------------------------------------- #
 
     # Step 2: Parsing
     print("\n" + "-" * 60)
@@ -91,6 +95,8 @@ def compile_spl_from_file(input_file, output_bas):
         traceback.print_exc()
         return False
 
+    # ---------------------------------------------------------------------------- #
+
     # Step 3: Build Syntax Tree
     print("\n" + "-" * 60)
     print("Step 3: Build Syntax Tree")
@@ -105,6 +111,8 @@ def compile_spl_from_file(input_file, output_bas):
     # print(symtab.pretty_print())
     #
 
+    # ---------------------------------------------------------------------------- #
+
     # Step 4: Build Symbol Table
     print("\n" + "-" * 60)
     print("Step 4: Building Symbol Table")
@@ -115,6 +123,8 @@ def compile_spl_from_file(input_file, output_bas):
     # Populate symbol table from AST
     # symbol_table.populate_from_ast(ast)
     print(symbol_table.pretty_print())
+
+    # ---------------------------------------------------------------------------- #
 
     # Step 5: Type Checking
     print("\n" + "-" * 60)
@@ -136,9 +146,8 @@ def compile_spl_from_file(input_file, output_bas):
     else:
         # Fallback if report is just a list or string
         print(report)
-    #
-    #
-    #
+
+    # ---------------------------------------------------------------------------- #
 
     # Step 6: Code Generation
     print("\n" + "-" * 60)
@@ -148,16 +157,12 @@ def compile_spl_from_file(input_file, output_bas):
     target_code = generate_code_from_ast(ast, symbol_table, intermediate_file)
     print(f"Intermediate code written to {intermediate_file}")
 
-    # print("\nAST")
-    # print(ast.pretty_print())
-
-    # print("\nsymbol_table")
-    # print(symbol_table.pretty_print())
-
     print(f"\n📋 Generated Target Code:")
     print("-" * 30)
     print(target_code)
     print("-" * 30)
+
+    # ---------------------------------------------------------------------------- #
 
     # Step 7: Convert to line-numbered BASIC
     print("\n" + "-" * 60)

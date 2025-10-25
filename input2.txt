@@ -3,8 +3,8 @@ proc { }
 func { }
 main {
   var { a b1 }
-  print "Hello123"
+  print "Hello123";
   a = 0;
-  while (neg 1) { halt }
-  if (eq 1 1) { print "ok" } else { halt }
+  while (1 eq 1) { halt };
+  if (1 eq 1) { print "ok" } else { halt }
 }
