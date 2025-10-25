@@ -1,6 +1,6 @@
 from parser import build_spl_grammar, SLRParser, Token, TokenType
-from syntax_tree import ProgramNode, VarDeclNode, ASTNode
-from symbol_table import SymbolTable
+from syntax_tree import ProgramNode, VarDeclNode, ASTNode, build_ast
+from symbol_table import SymbolTable, build_symbol_table
 
 
 def build_mock_ast():
@@ -29,24 +29,6 @@ def build_mock_ast():
     )
 
     return prog
-
-
-def build_symbol_table(ast_root):
-    """Builds a symbol table from AST (simplified version)."""
-    root = SymbolTable("everywhere")
-
-    # global scope
-    globals_scope = root.create_child_scope("global")
-    for child in ast_root.children[0].children:  # GLOBALS
-        globals_scope.add(child.value, "var", node_id=child.id)
-
-    # main scope
-    main_scope = root.create_child_scope("main")
-    vars_node, algo_node = ast_root.children[3].children
-    for child in vars_node.children:  # VARS
-        main_scope.add(child.value, "var", node_id=child.id)
-
-    return root
 
 
 def test_parser_and_ast():
@@ -95,11 +77,13 @@ def test_parser_and_ast():
     print(program_text)
 
     print("\n=== PARSER CHECK ===")
-    ok = parser.parse_tokens(tokens)
-    print("Parse result:", ok)
+    parse_result = parser.parse_tokens(tokens)
+    print("Parse result:", parse_result)
 
     print("\n=== AST ===")
-    ast = build_mock_ast()
+    # ast = build_mock_ast()
+    # ast = build_ast()
+    ast = build_ast(tokens)
     print(ast.pretty_print())
 
     print("\n=== SYMBOL TABLE ===")

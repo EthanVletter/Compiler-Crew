@@ -270,11 +270,13 @@ class SLRParser:
         self.action_table, self.goto_table = build_parsing_table(
             grammar, self.states, self.transitions, self.first, self.follow
         )
+        # self.reductions = []
 
     def parse(self, tokens):
         """Parse a list of token strings"""
         stack = [0]
         pointer = 0
+        # self.reductions.clear()
 
         print(f"Starting parse with tokens: {tokens}")
 
@@ -309,6 +311,8 @@ class SLRParser:
                     print(f"Internal parser error: no goto from {state} on {head}")
                     return False
                 stack.append(goto_state)
+                # record each successful reduction
+                # self.reductions.append((head, body))
                 print(f"  Goto state {goto_state}")
             elif kind == "accept":
                 print("Parsing successful!")
