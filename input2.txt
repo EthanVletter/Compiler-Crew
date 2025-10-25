@@ -1,0 +1,10 @@
+glob { x y }
+proc { }
+func { }
+main {
+  var { a b1 }
+  print "Hello123";
+  a = 0;
+  while (1 eq 1) { halt };
+  if (1 eq 1) { print "ok" } else { halt }
+}

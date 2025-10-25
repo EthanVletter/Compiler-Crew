@@ -1,0 +1,6 @@
+x = 42
+t1 = x + 8
+y = t1
+PRINT "The answer is: "
+PRINT y
+STOP

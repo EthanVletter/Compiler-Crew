@@ -1,0 +1,21 @@
+10 max = 10
+20 i = 1
+30 REM L1
+40 t1 = i = max
+50 IF t1 = 1 THEN 70
+60 GOTO 200
+70 REM L2
+80 t2 = i > 5
+90 IF t2 = 1 THEN 130
+100 PRINT "Small: "
+110 PRINT i
+120 GOTO 160
+130 REM L4
+140 PRINT "Large: "
+150 PRINT i
+160 REM L5
+170 t3 = i + 1
+180 i = t3
+190 GOTO 30
+200 REM L3
+210 STOP

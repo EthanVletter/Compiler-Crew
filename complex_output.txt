@@ -1,0 +1,21 @@
+max = 10
+i = 1
+REM L1
+t1 = i = max
+IF t1 = 1 THEN L2
+GOTO L3
+REM L2
+t2 = i > 5
+IF t2 = 1 THEN L4
+PRINT "Small: "
+PRINT i
+GOTO L5
+REM L4
+PRINT "Large: "
+PRINT i
+REM L5
+t3 = i + 1
+i = t3
+GOTO L1
+REM L3
+STOP
