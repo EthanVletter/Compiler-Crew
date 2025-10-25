@@ -192,9 +192,16 @@ class TypeChecker:
 
         if t == "PRINT":
             # children[0] = STRING or ATOM
-            # self.check_output(node.children[0], f"{ctx}/print")
             if node.children:
-                self.check_output(node.children[0], f"{ctx}/print")
+                child = node.children[0]
+                # Handle VAR nodes in print statements
+                if child.type == "VAR":
+                    if not _require_var(
+                        self.scope, child.value, self.report, f"{ctx}/print"
+                    ):
+                        return
+                else:
+                    self.check_output(child, f"{ctx}/print")
             else:
                 self.report.add(f"{ctx}: PRINT has no expression to print")
             return
@@ -225,6 +232,17 @@ class TypeChecker:
             return
 
         if t == "ASSIGN_EXPR":  # children = [VAR, TERM]
+            var_node = node.children[0]
+            term_node = node.children[1]
+            if self.type_term(term_node) != NUMERIC:
+                self.report.add(f"{ctx}: right-hand side of assignment must be numeric")
+            if var_node.type != "VAR" or not _require_var(
+                self.scope, var_node.value, self.report, f"{ctx}/target"
+            ):
+                return
+            return
+
+        if t == "ASSIGN":  # Our AST creates ASSIGN nodes - children = [VAR, TERM]
             var_node = node.children[0]
             term_node = node.children[1]
             if self.type_term(term_node) != NUMERIC:
@@ -268,6 +286,41 @@ class TypeChecker:
             self.pop_scope()
             if self.type_term(cond) != BOOLEAN:
                 self.report.add(f"{ctx}: do-until condition must be boolean")
+            return
+
+        if t == "LOOP":
+            # Handle LOOP nodes containing WHILE
+            if node.children and node.children[0].type == "WHILE":
+                while_node = node.children[0]
+                cond = while_node.children[0]
+                body_algo = while_node.children[1]
+                if self.type_term(cond) != BOOLEAN:
+                    self.report.add(f"{ctx}: while condition must be boolean")
+                self.push_scope("while")
+                self.check_algo(body_algo, f"{ctx}/while-body")
+                self.pop_scope()
+            else:
+                self.report.add(f"{ctx}: unknown LOOP structure")
+            return
+
+        if t == "BRANCH":
+            # Handle BRANCH nodes containing IF
+            if node.children and node.children[0].type == "IF":
+                if_node = node.children[0]
+                cond = if_node.children[0]
+                then_algo = if_node.children[1]
+                else_algo = if_node.children[2] if len(if_node.children) > 2 else None
+                if self.type_term(cond) != BOOLEAN:
+                    self.report.add(f"{ctx}: if condition must be boolean")
+                self.push_scope("then")
+                self.check_algo(then_algo, f"{ctx}/then")
+                self.pop_scope()
+                if else_algo is not None:
+                    self.push_scope("else")
+                    self.check_algo(else_algo, f"{ctx}/else")
+                    self.pop_scope()
+            else:
+                self.report.add(f"{ctx}: unknown BRANCH structure")
             return
 
         if t == "RETURN":

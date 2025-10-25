@@ -1,7 +1,7 @@
 # Name of your BASIC source file (without extension)
-SRC = basic_output.bas
+SRC = output.bas
 # Name of the executable
-EXE = basic_output
+EXE = output
 
 # Compiler flags
 FLAGS = -lang qb
